@@ -1,10 +1,5 @@
 ---
 server:
-  config:
-      url: http://argocd.tty0.guru
-  rbacConfig:
-        policy.default: role:admin
-
   extraArgs:
     - "--insecure"
 installCRDs: true
