@@ -19,53 +19,56 @@ jobs:
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v2
-      - name: Configure AWS credentials
+      - name: 'Configure AWS credentials'
         uses: aws-actions/configure-aws-credentials@v1
+        env:
+          AWS_REGION: us-east-1
+          KUBE_NAMESPACE: argocd
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - name: 'Setup helmfile'
         uses: mamezou-tech/setup-helmfile@v0.8.0
-      - name: vaildate
+      - name: 'Validate templates'
         run: |
           helmfile lint
           helmfile template
-        env:
-          ENVIRONMENT: ${{ env.ENV }}
-          KUBE_NAMESPACE: ${{ env.KUBE_NAMESPACE }}
-      - name: diff
+      - name: Login to EKS
         run: |
-          helmfile diff
-        env:
-          ENVIRONMENT: ${{ env.ENV }}
-          KUBE_NAMESPACE: ${{ env.KUBE_NAMESPACE }}
+          aws eks update-kubeconfig --name "ekoparty"
+      - name: 'Helmfile diff'
+        run: |
+          helmfile diff --suppress-secrets
 
   sync:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     if: github.ref == 'refs/heads/master'
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v2
-      - name: Configure AWS credentials
+      - name: 'Configure AWS credentials'
         uses: aws-actions/configure-aws-credentials@v1
+        env:
+          AWS_REGION: us-east-1
+          KUBE_NAMESPACE: argocd
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - name: 'Setup helmfile'
         uses: mamezou-tech/setup-helmfile@v0.8.0
-      - name: vaildate
+      - name: 'Validate templates'
         run: |
           helmfile lint
           helmfile template
-        env:
-          ENVIRONMENT: ${{ env.ENV }}
-          KUBE_NAMESPACE: ${{ env.KUBE_NAMESPACE }}
-      - name: diff
+      - name: Login to EKS
         run: |
-          helmfile diff
-        env:
-          ENVIRONMENT: ${{ env.ENV }}
-          KUBE_NAMESPACE: ${{ env.KUBE_NAMESPACE }}
+          aws eks update-kubeconfig --name "ekoparty"
+      - name: 'Helmfile diff'
+        run: |
+          helmfile diff --suppress-secrets
+      - name: 'Helmfile sync'
+        run: |
+          helmfile sync
