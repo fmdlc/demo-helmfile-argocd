@@ -1,5 +1,5 @@
 
-name: 'Terraform Execution'
+name: 'Helmfile Execution'
 
 on:
   push:
